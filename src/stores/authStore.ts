@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { User } from '@/types'
-import { USERS, DEMO_PASSWORDS } from '@/data/mockData'
+import { DEMO_PASSWORDS } from '@/data/mockData'
+import { useUserStore } from '@/stores/userStore'
 
 interface AuthState {
   user: User | null
@@ -28,8 +29,9 @@ export const useAuthStore = create<AuthState>()(
         // Simulate API call
         await new Promise(r => setTimeout(r, 800))
 
-        const user = USERS.find(u => u.cccd === cccd)
-        const correctPassword = DEMO_PASSWORDS[cccd]
+        const dynamicUsers = useUserStore.getState().users
+        const user = dynamicUsers.find(u => u.cccd === cccd)
+        const correctPassword = DEMO_PASSWORDS[cccd] || '123456'
 
         if (!user) {
           set({ isLoading: false, error: 'Tài khoản của bạn chưa được cấp quyền truy cập hoặc đã bị khóa. Vui lòng liên hệ Trợ lý hoặc Giám đốc để được hỗ trợ.' })
@@ -48,6 +50,8 @@ export const useAuthStore = create<AuthState>()(
 
         const updatedUser = { ...user, lastLoginAt: new Date().toISOString() }
         set({ user: updatedUser, isAuthenticated: true, isLoading: false, error: null })
+        // Update login timestamp in userStore as well
+        useUserStore.getState().updateUser(user.id, { lastLoginAt: updatedUser.lastLoginAt })
         return { success: true, mustChangePassword: user.mustChangePassword }
       },
 
@@ -61,13 +65,20 @@ export const useAuthStore = create<AuthState>()(
         if (user) {
           set({ user: { ...user, mustChangePassword: false } })
           DEMO_PASSWORDS[user.cccd] = _newPassword
+          // Sync to userStore
+          useUserStore.getState().updateUser(user.id, { mustChangePassword: false })
         }
         return true
       },
 
       updateUser: (updates: Partial<User>) => {
         const { user } = get()
-        if (user) set({ user: { ...user, ...updates } })
+        if (user) {
+          const updatedUser = { ...user, ...updates }
+          set({ user: updatedUser })
+          // Sync to userStore
+          useUserStore.getState().updateUser(user.id, updates)
+        }
       },
 
       clearError: () => set({ error: null }),

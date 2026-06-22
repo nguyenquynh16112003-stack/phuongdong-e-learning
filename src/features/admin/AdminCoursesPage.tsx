@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { useCourseStore } from '@/stores/courseStore'
-import { Search, Plus, Edit, Trash2, Eye, LayoutGrid, List, Globe, Globe2 } from 'lucide-react'
+import { Search, Plus, Edit, Trash2, Eye, LayoutGrid, List, Globe, FileText } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
@@ -226,8 +226,11 @@ export function AdminCoursesPage() {
                         <Button variant="ghost" size="icon" onClick={() => navigate(`/courses/${course.id}`)} title="Xem thử">
                           <Eye className="h-4 w-4 text-blue-600" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(course)} title="Sửa nội dung">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(course)} title="Sửa thông tin">
                           <Edit className="h-4 w-4 text-primary-600" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/courses/${course.id}`)} title="Quản lý nội dung">
+                          <FileText className="h-4 w-4 text-orange-500" />
                         </Button>
                         <Button variant="ghost" size="icon" onClick={() => togglePublishCourse(course.id)} title={course.isPublished ? "Hủy xuất bản" : "Xuất bản"}>
                           <Globe className={`h-4 w-4 ${course.isPublished ? 'text-green-600' : 'text-gray-400'}`} />
@@ -272,7 +275,8 @@ export function AdminCoursesPage() {
                 <div className="mt-auto flex items-center justify-between border-t pt-4">
                   <span className="text-xs text-muted-foreground">Cập nhật: {new Date(course.updatedAt).toLocaleDateString('vi-VN')}</span>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(course)}><Edit className="h-4 w-4 text-primary-600" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(course)} title="Sửa thông tin"><Edit className="h-4 w-4 text-primary-600" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/admin/courses/${course.id}`)} title="Quản lý nội dung"><FileText className="h-4 w-4 text-orange-500" /></Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => togglePublishCourse(course.id)} title={course.isPublished ? "Hủy xuất bản" : "Xuất bản"}>
                       <Globe className={`h-4 w-4 ${course.isPublished ? 'text-green-600' : 'text-gray-400'}`} />
                     </Button>

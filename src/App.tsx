@@ -13,6 +13,7 @@ import { CertificatesPage } from '@/features/certificates/CertificatesPage'
 import { NotificationsPage } from '@/features/notifications/NotificationsPage'
 import { ProfilePage } from '@/features/profile/ProfilePage'
 import { AdminCoursesPage } from '@/features/admin/AdminCoursesPage'
+import { AdminCourseDetailPage } from '@/features/admin/AdminCourseDetailPage'
 import { AdminTestsPage } from '@/features/admin/AdminTestsPage'
 import { AdminUsersPage } from '@/features/admin/AdminUsersPage'
 import { AdminReportsPage } from '@/features/admin/AdminReportsPage'
@@ -52,6 +53,7 @@ function App() {
 
           {/* Admin Routes */}
           <Route path="/admin/courses" element={<AdminCoursesPage />} />
+          <Route path="/admin/courses/:courseId" element={<AdminCourseDetailPage />} />
           <Route path="/admin/tests" element={<AdminTestsPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
           <Route path="/admin/reports" element={<AdminReportsPage />} />

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { Course, Chapter, Lesson, Test } from '@/types'
 import { COURSES, CHAPTERS, LESSONS, TESTS } from '@/data/mockData'
 
@@ -38,86 +39,99 @@ interface CourseState {
   togglePublishCourse: (id: string) => void
 }
 
-export const useCourseStore = create<CourseState>((set, get) => ({
-  courses: COURSES,
-  chapters: CHAPTERS,
-  lessons: LESSONS,
-  tests: TESTS,
-  currentCourse: null,
-  currentLesson: null,
-  currentTest: null,
-  isLoading: false,
+export const useCourseStore = create<CourseState>()(
+  persist(
+    (set, get) => ({
+      courses: COURSES,
+      chapters: CHAPTERS,
+      lessons: LESSONS,
+      tests: TESTS,
+      currentCourse: null,
+      currentLesson: null,
+      currentTest: null,
+      isLoading: false,
 
-  fetchCourses: () => set({ courses: COURSES }),
+      fetchCourses: () => set({ courses: COURSES }),
 
-  fetchCourseById: (id) => get().courses.find(c => c.id === id),
+      fetchCourseById: (id) => get().courses.find(c => c.id === id),
 
-  fetchLessonById: (id) => get().lessons.find(l => l.id === id),
+      fetchLessonById: (id) => get().lessons.find(l => l.id === id),
 
-  fetchTestByLessonId: (lessonId) => get().tests.find(t => t.lessonId === lessonId),
+      fetchTestByLessonId: (lessonId) => get().tests.find(t => t.lessonId === lessonId),
 
-  getChaptersByCourse: (courseId) =>
-    get().chapters.filter(c => c.courseId === courseId).sort((a, b) => a.orderIndex - b.orderIndex),
+      getChaptersByCourse: (courseId) =>
+        get().chapters.filter(c => c.courseId === courseId).sort((a, b) => a.orderIndex - b.orderIndex),
 
-  getLessonsByChapter: (chapterId) =>
-    get().lessons.filter(l => l.chapterId === chapterId).sort((a, b) => a.orderIndex - b.orderIndex),
+      getLessonsByChapter: (chapterId) =>
+        get().lessons.filter(l => l.chapterId === chapterId).sort((a, b) => a.orderIndex - b.orderIndex),
 
-  setCurrentCourse: (course) => set({ currentCourse: course }),
-  setCurrentLesson: (lesson) => set({ currentLesson: lesson }),
-  setCurrentTest: (test) => set({ currentTest: test }),
+      setCurrentCourse: (course) => set({ currentCourse: course }),
+      setCurrentLesson: (lesson) => set({ currentLesson: lesson }),
+      setCurrentTest: (test) => set({ currentTest: test }),
 
-  createCourse: (course) => {
-    const newCourse: Course = {
-      ...course, id: `course-${Date.now()}`,
-      chaptersCount: 0, lessonsCount: 0, totalDurationSeconds: 0,
-      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      createCourse: (course) => {
+        const newCourse: Course = {
+          ...course, id: `course-${Date.now()}`,
+          chaptersCount: 0, lessonsCount: 0, totalDurationSeconds: 0,
+          createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        }
+        set(s => ({ courses: [...s.courses, newCourse] }))
+        return newCourse
+      },
+
+      updateCourse: (id, updates) =>
+        set(s => ({ courses: s.courses.map(c => c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c) })),
+
+      deleteCourse: (id) =>
+        set(s => ({ courses: s.courses.filter(c => c.id !== id) })),
+
+      createChapter: (chapter) => {
+        const newChapter: Chapter = { ...chapter, id: `chap-${Date.now()}` }
+        set(s => ({ chapters: [...s.chapters, newChapter] }))
+        return newChapter
+      },
+
+      updateChapter: (id, updates) =>
+        set(s => ({ chapters: s.chapters.map(c => c.id === id ? { ...c, ...updates } : c) })),
+
+      deleteChapter: (id) =>
+        set(s => ({ chapters: s.chapters.filter(c => c.id !== id) })),
+
+      createLesson: (lesson) => {
+        const newLesson: Lesson = { ...lesson, id: `lesson-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+        set(s => ({ lessons: [...s.lessons, newLesson] }))
+        return newLesson
+      },
+
+      updateLesson: (id, updates) =>
+        set(s => ({ lessons: s.lessons.map(l => l.id === id ? { ...l, ...updates, updatedAt: new Date().toISOString() } : l) })),
+
+      deleteLesson: (id) =>
+        set(s => ({ lessons: s.lessons.filter(l => l.id !== id) })),
+
+      createTest: (test) => {
+        const newTest: Test = { ...test, id: `test-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+        set(s => ({ tests: [...s.tests, newTest] }))
+        return newTest
+      },
+
+      updateTest: (id, updates) =>
+        set(s => ({ tests: s.tests.map(t => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t) })),
+
+      deleteTest: (id) =>
+        set(s => ({ tests: s.tests.filter(t => t.id !== id) })),
+
+      togglePublishCourse: (id) =>
+        set(s => ({ courses: s.courses.map(c => c.id === id ? { ...c, isPublished: !c.isPublished, updatedAt: new Date().toISOString() } : c) })),
+    }),
+    {
+      name: 'phuong-dong-courses',
+      partialize: (state) => ({
+        courses: state.courses,
+        chapters: state.chapters,
+        lessons: state.lessons,
+        tests: state.tests,
+      })
     }
-    set(s => ({ courses: [...s.courses, newCourse] }))
-    return newCourse
-  },
-
-  updateCourse: (id, updates) =>
-    set(s => ({ courses: s.courses.map(c => c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c) })),
-
-  deleteCourse: (id) =>
-    set(s => ({ courses: s.courses.filter(c => c.id !== id) })),
-
-  createChapter: (chapter) => {
-    const newChapter: Chapter = { ...chapter, id: `chap-${Date.now()}` }
-    set(s => ({ chapters: [...s.chapters, newChapter] }))
-    return newChapter
-  },
-
-  updateChapter: (id, updates) =>
-    set(s => ({ chapters: s.chapters.map(c => c.id === id ? { ...c, ...updates } : c) })),
-
-  deleteChapter: (id) =>
-    set(s => ({ chapters: s.chapters.filter(c => c.id !== id) })),
-
-  createLesson: (lesson) => {
-    const newLesson: Lesson = { ...lesson, id: `lesson-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-    set(s => ({ lessons: [...s.lessons, newLesson] }))
-    return newLesson
-  },
-
-  updateLesson: (id, updates) =>
-    set(s => ({ lessons: s.lessons.map(l => l.id === id ? { ...l, ...updates, updatedAt: new Date().toISOString() } : l) })),
-
-  deleteLesson: (id) =>
-    set(s => ({ lessons: s.lessons.filter(l => l.id !== id) })),
-
-  createTest: (test) => {
-    const newTest: Test = { ...test, id: `test-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-    set(s => ({ tests: [...s.tests, newTest] }))
-    return newTest
-  },
-
-  updateTest: (id, updates) =>
-    set(s => ({ tests: s.tests.map(t => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t) })),
-
-  deleteTest: (id) =>
-    set(s => ({ tests: s.tests.filter(t => t.id !== id) })),
-
-  togglePublishCourse: (id) =>
-    set(s => ({ courses: s.courses.map(c => c.id === id ? { ...c, isPublished: !c.isPublished, updatedAt: new Date().toISOString() } : c) })),
-}))
+  )
+)
