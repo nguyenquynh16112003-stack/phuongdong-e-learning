@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { useUserStore } from '@/stores/userStore'
-import { Search, Plus, MoreHorizontal, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react'
+import { Search, Plus, MoreHorizontal, ShieldAlert, CheckCircle2, XCircle, Upload, Download } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 
@@ -72,6 +72,93 @@ export function AdminUsersPage() {
     setIsAddOpen(false)
   }
 
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const text = event.target?.result as string
+      if (!text) return
+      const lines = text.split('\n')
+      let count = 0
+      // Skip header
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim()
+        if (!line) continue
+        const columns = line.split(',')
+        if (columns.length >= 2) {
+          const rawName = columns[0].replace(/"/g, '').trim()
+          const rawCccd = columns[1].replace(/"/g, '').trim()
+          if (!rawName || !rawCccd) continue
+
+          const emailVal = columns[2] ? columns[2].replace(/"/g, '').trim() : `${rawCccd}@phuongdong.vn`
+          const phoneVal = columns[3] ? columns[3].replace(/"/g, '').trim() : '0900000000'
+          const roleSlugVal = (columns[4] ? columns[4].replace(/"/g, '').trim() : 'chuyen_vien') as any
+          const branchVal = columns[5] ? columns[5].replace(/"/g, '').trim() : 'Hội sở'
+          const departmentVal = columns[6] ? columns[6].replace(/"/g, '').trim() : 'Kinh doanh'
+
+          let roleName = 'Chuyên viên Kinh doanh'
+          let roleId = 'role-4'
+          let roleLevel = 4
+          if (roleSlugVal === 'super_admin') {
+            roleName = 'Super Admin'
+            roleId = 'role-1'
+            roleLevel = 1
+          } else if (roleSlugVal === 'giam_doc') {
+            roleName = 'Giám đốc'
+            roleId = 'role-2'
+            roleLevel = 2
+          } else if (roleSlugVal === 'truong_khu_vuc') {
+            roleName = 'Trưởng khu vực'
+            roleId = 'role-3'
+            roleLevel = 3
+          }
+
+          createUser({
+            fullName: rawName,
+            cccd: rawCccd,
+            email: emailVal,
+            phone: phoneVal,
+            avatarUrl: '',
+            roleId,
+            roleName,
+            roleSlug: roleSlugVal,
+            roleLevel,
+            regionId: 'reg-1',
+            regionName: 'Miền Bắc',
+            departmentId: 'dept-1',
+            departmentName: departmentVal,
+            department: departmentVal,
+            branch: branchVal,
+            isActive: true,
+            mustChangePassword: true,
+          })
+          count++
+        }
+      }
+      alert(`Đã nhập thành công ${count} người dùng từ file CSV!`)
+      // Clear file input
+      e.target.value = ''
+    }
+    reader.readAsText(file)
+  }
+
+  const handleExportCSV = () => {
+    let csvContent = 'Họ và tên,CCCD/Mã nhân viên,Email,Số điện thoại,Phân quyền (slug),Chi nhánh,Phòng ban,Trạng thái\n'
+    users.forEach(u => {
+      csvContent += `"${u.fullName}","${u.cccd}","${u.email}","${u.phone}","${u.roleSlug}","${u.branch}","${u.department}","${u.isActive ? 'Hoạt động' : 'Khóa'}"\n`
+    })
+
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', `danh_sach_nguoi_dung_${Date.now()}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const filteredUsers = users.filter(u => 
     u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
     u.cccd.includes(searchTerm) ||
@@ -95,59 +182,75 @@ export function AdminUsersPage() {
           <p className="text-muted-foreground mt-1">Quản lý tài khoản và phân quyền hệ thống</p>
         </div>
         
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-2" /> Thêm người dùng</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Thêm người dùng mới</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Họ và tên</Label>
-                <Input placeholder="Nhập họ và tên..." value={fullName} onChange={(e) => setFullName(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>CCCD / Mã nhân viên</Label>
-                <Input placeholder="Dùng làm tên đăng nhập..." value={cccd} onChange={(e) => setCccd(e.target.value)} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <input 
+            type="file" 
+            id="csv-file-input" 
+            accept=".csv" 
+            className="hidden" 
+            onChange={handleImportCSV} 
+          />
+          <Button variant="outline" onClick={() => document.getElementById('csv-file-input')?.click()}>
+            <Upload className="h-4 w-4 mr-2" /> Nhập Excel/CSV
+          </Button>
+          <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="h-4 w-4 mr-2" /> Xuất Excel/CSV
+          </Button>
+          
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+              <Button><Plus className="h-4 w-4 mr-2" /> Thêm người dùng</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Thêm người dùng mới</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>Email</Label>
-                  <Input type="email" placeholder="example@phuongdong.vn" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Label>Họ và tên</Label>
+                  <Input placeholder="Nhập họ và tên..." value={fullName} onChange={(e) => setFullName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Phân quyền</Label>
-                  <select 
-                    value={roleSlug} 
-                    onChange={(e) => setRoleSlug(e.target.value as any)}
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="chuyen_vien">Chuyên viên kinh doanh</option>
-                    <option value="truong_khu_vuc">Trưởng khu vực</option>
-                    <option value="giam_doc">Giám đốc</option>
-                    <option value="super_admin">Quản trị viên</option>
-                  </select>
+                  <Label>CCCD / Mã nhân viên</Label>
+                  <Input placeholder="Dùng làm tên đăng nhập..." value={cccd} onChange={(e) => setCccd(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input type="email" placeholder="example@phuongdong.vn" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Phân quyền</Label>
+                    <select 
+                      value={roleSlug} 
+                      onChange={(e) => setRoleSlug(e.target.value as any)}
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="chuyen_vien">Chuyên viên kinh doanh</option>
+                      <option value="truong_khu_vuc">Trưởng khu vực</option>
+                      <option value="giam_doc">Giám đốc</option>
+                      <option value="super_admin">Quản trị viên</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Số điện thoại</Label>
+                    <Input placeholder="0909xxxxxx" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Chi nhánh</Label>
+                    <Input placeholder="Hội sở, Chi nhánh 1..." value={branch} onChange={(e) => setBranch(e.target.value)} />
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Số điện thoại</Label>
-                  <Input placeholder="0909xxxxxx" value={phone} onChange={(e) => setPhone(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Chi nhánh</Label>
-                  <Input placeholder="Hội sở, Chi nhánh 1..." value={branch} onChange={(e) => setBranch(e.target.value)} />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddOpen(false)}>Hủy</Button>
-              <Button onClick={handleCreate} disabled={!fullName || !cccd}>Lưu & Tạo tài khoản</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddOpen(false)}>Hủy</Button>
+                <Button onClick={handleCreate} disabled={!fullName || !cccd}>Lưu & Tạo tài khoản</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
