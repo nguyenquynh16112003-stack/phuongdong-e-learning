@@ -151,7 +151,7 @@ export function LessonPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-heading font-bold mb-2">{lesson.title}</h1>
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1"><PlayCircle className="h-4 w-4" /> {lesson.durationMinutes} phút</span>
+            <span className="flex items-center gap-1"><PlayCircle className="h-4 w-4" /> {Math.round(lesson.durationSeconds / 60)} phút</span>
             {lesson.progress && (
               <span className="text-primary-600 font-medium">Đã xem {lesson.progress.watchPercentage}%</span>
             )}
@@ -302,7 +302,7 @@ export function LessonPage() {
                       {index + 1}. {l.title}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {l.durationMinutes} phút
+                      {Math.round(l.durationSeconds / 60)} phút
                     </p>
                   </div>
                 </div>

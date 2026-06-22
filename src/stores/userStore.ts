@@ -11,6 +11,7 @@ interface UserManagementState {
   deleteUser: (id: string) => void
   lockUser: (id: string) => void
   unlockUser: (id: string) => void
+  toggleUserStatus: (id: string) => void
   resetPassword: (id: string, newPassword: string) => void
   getUserById: (id: string) => User | undefined
   searchUsers: (query: string) => User[]
@@ -49,6 +50,9 @@ export const useUserStore = create<UserManagementState>()(
 
       unlockUser: (id) =>
         set(s => ({ users: s.users.map(u => u.id === id ? { ...u, isActive: true } : u) })),
+
+      toggleUserStatus: (id) =>
+        set(s => ({ users: s.users.map(u => u.id === id ? { ...u, isActive: !u.isActive } : u) })),
 
       resetPassword: (_id, _newPassword) => {
         // In real app, call Supabase Auth API

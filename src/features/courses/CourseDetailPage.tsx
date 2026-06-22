@@ -196,7 +196,7 @@ export function CourseDetailPage() {
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                             <span className="flex items-center gap-1">
-                              <PlayCircle className="h-3 w-3" /> {(lesson as any).durationMinutes || 0} phút
+                              <PlayCircle className="h-3 w-3" /> {Math.round(lesson.durationSeconds / 60)} phút
                             </span>
                             {lesson.type !== 'video' && (
                               <span className="flex items-center gap-1">

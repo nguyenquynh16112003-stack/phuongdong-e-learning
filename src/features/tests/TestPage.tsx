@@ -72,7 +72,7 @@ export function TestPage() {
   // Initial load
   React.useEffect(() => {
     if (testInfo) {
-      setTimeLeft(testInfo.durationMinutes * 60)
+      setTimeLeft((testInfo.timeLimitMinutes || testInfo.durationMinutes || 15) * 60)
     }
   }, [testInfo])
 

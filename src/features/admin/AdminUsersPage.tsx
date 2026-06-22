@@ -10,9 +10,67 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from '@/components/ui/label'
 
 export function AdminUsersPage() {
-  const { users, toggleUserStatus } = useUserStore()
+  const { users, toggleUserStatus, createUser } = useUserStore()
   const [searchTerm, setSearchTerm] = React.useState('')
   const [isAddOpen, setIsAddOpen] = React.useState(false)
+
+  // Form states
+  const [fullName, setFullName] = React.useState('')
+  const [cccd, setCccd] = React.useState('')
+  const [email, setEmail] = React.useState('')
+  const [roleSlug, setRoleSlug] = React.useState<'chuyen_vien' | 'truong_khu_vuc' | 'giam_doc' | 'super_admin'>('chuyen_vien')
+  const [phone, setPhone] = React.useState('')
+  const [branch, setBranch] = React.useState('Hội sở')
+  const [department, setDepartment] = React.useState('Kinh doanh')
+
+  const handleCreate = () => {
+    if (!fullName || !cccd) return
+
+    let roleName = 'Chuyên viên Kinh doanh'
+    let roleId = 'role-4'
+    let roleLevel = 4
+    if (roleSlug === 'super_admin') {
+      roleName = 'Super Admin'
+      roleId = 'role-1'
+      roleLevel = 1
+    } else if (roleSlug === 'giam_doc') {
+      roleName = 'Giám đốc'
+      roleId = 'role-2'
+      roleLevel = 2
+    } else if (roleSlug === 'truong_khu_vuc') {
+      roleName = 'Trưởng khu vực'
+      roleId = 'role-3'
+      roleLevel = 3
+    }
+
+    createUser({
+      fullName,
+      cccd,
+      email: email || `${cccd}@phuongdong.vn`,
+      phone: phone || '0900000000',
+      avatarUrl: '',
+      roleId,
+      roleName,
+      roleSlug,
+      roleLevel,
+      regionId: 'reg-1',
+      regionName: 'Miền Bắc',
+      departmentId: 'dept-1',
+      departmentName: department,
+      department,
+      branch,
+      isActive: true,
+      mustChangePassword: true,
+    })
+
+    // Reset states
+    setFullName('')
+    setCccd('')
+    setEmail('')
+    setPhone('')
+    setRoleSlug('chuyen_vien')
+    setIsAddOpen(false)
+  }
 
   const filteredUsers = users.filter(u => 
     u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -48,20 +106,24 @@ export function AdminUsersPage() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label>Họ và tên</Label>
-                <Input placeholder="Nhập họ và tên..." />
+                <Input placeholder="Nhập họ và tên..." value={fullName} onChange={(e) => setFullName(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>CCCD / Mã nhân viên</Label>
-                <Input placeholder="Dùng làm tên đăng nhập..." />
+                <Input placeholder="Dùng làm tên đăng nhập..." value={cccd} onChange={(e) => setCccd(e.target.value)} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Email</Label>
-                  <Input type="email" placeholder="example@phuongdong.vn" />
+                  <Input type="email" placeholder="example@phuongdong.vn" value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label>Phân quyền</Label>
-                  <select className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                  <select 
+                    value={roleSlug} 
+                    onChange={(e) => setRoleSlug(e.target.value as any)}
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
                     <option value="chuyen_vien">Chuyên viên kinh doanh</option>
                     <option value="truong_khu_vuc">Trưởng khu vực</option>
                     <option value="giam_doc">Giám đốc</option>
@@ -69,10 +131,20 @@ export function AdminUsersPage() {
                   </select>
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Số điện thoại</Label>
+                  <Input placeholder="0909xxxxxx" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Chi nhánh</Label>
+                  <Input placeholder="Hội sở, Chi nhánh 1..." value={branch} onChange={(e) => setBranch(e.target.value)} />
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddOpen(false)}>Hủy</Button>
-              <Button onClick={() => setIsAddOpen(false)}>Lưu & Tạo tài khoản</Button>
+              <Button onClick={handleCreate} disabled={!fullName || !cccd}>Lưu & Tạo tài khoản</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
