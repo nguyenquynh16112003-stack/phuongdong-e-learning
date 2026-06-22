@@ -121,27 +121,29 @@ export function DashboardPage() {
           
           <div className="grid sm:grid-cols-2 gap-4">
             {courses.slice(0, 2).map(course => (
-              <Card key={course.id} className="group hover:border-primary-500 transition-colors overflow-hidden flex flex-col">
-                <div className="h-32 bg-muted relative">
-                  <img src={course.thumbnailUrl || 'https://images.unsplash.com/photo-1560518846-1ea118f396af?w=500&auto=format&fit=crop&q=60'} alt={course.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
-                      <PlayCircle className="h-6 w-6 text-primary-600 ml-1" />
+              <Link key={course.id} to={`/courses/${course.id}`} className="flex flex-col">
+                <Card className="group hover:border-primary-500 transition-colors overflow-hidden flex flex-col h-full">
+                  <div className="h-32 bg-muted relative">
+                    <img src={course.thumbnailUrl || 'https://images.unsplash.com/photo-1560518846-1ea118f396af?w=500&auto=format&fit=crop&q=60'} alt={course.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                        <PlayCircle className="h-6 w-6 text-primary-600 ml-1" />
+                      </div>
                     </div>
                   </div>
-                </div>
-                <CardContent className="p-4 flex-1 flex flex-col">
-                  <h3 className="font-semibold text-lg line-clamp-2 mb-2 group-hover:text-primary-600 transition-colors">{course.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-1">Bài 3: Kỹ năng đàm phán chốt sale</p>
-                  <div className="mt-auto space-y-2">
-                    <div className="flex justify-between text-xs font-medium">
-                      <span>Tiến độ</span>
-                      <span className="text-primary-600">45%</span>
+                  <CardContent className="p-4 flex-1 flex flex-col">
+                    <h3 className="font-semibold text-lg line-clamp-2 mb-2 group-hover:text-primary-600 transition-colors">{course.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-1">Bài 3: Kỹ năng đàm phán chốt sale</p>
+                    <div className="mt-auto space-y-2">
+                      <div className="flex justify-between text-xs font-medium">
+                        <span>Tiến độ</span>
+                        <span className="text-primary-600">45%</span>
+                      </div>
+                      <Progress value={45} className="h-2" />
                     </div>
-                    <Progress value={45} className="h-2" />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
 
