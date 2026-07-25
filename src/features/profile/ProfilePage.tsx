@@ -5,14 +5,63 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/authStore'
-import { Camera, Building2, Mail, Phone, MapPin, Shield } from 'lucide-react'
+import { Camera, Building2, Mail, Phone, Shield, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 
 export function ProfilePage() {
-  const { user } = useAuthStore()
+  const { user, updateUser, changePassword } = useAuthStore()
+
+  const [email, setEmail] = React.useState(user?.email || '')
+  const [phone, setPhone] = React.useState(user?.phone || '')
+  const [profileSaved, setProfileSaved] = React.useState(false)
+
+  const [currentPass, setCurrentPass] = React.useState('')
+  const [newPass, setNewPass] = React.useState('')
+  const [confirmPass, setConfirmPass] = React.useState('')
+  const [passError, setPassError] = React.useState('')
+  const [passSuccess, setPassSuccess] = React.useState(false)
+  const [isChangingPass, setIsChangingPass] = React.useState(false)
 
   if (!user) return null
+
+  const handleSaveProfile = () => {
+    updateUser({ email, phone })
+    setProfileSaved(true)
+    setTimeout(() => setProfileSaved(false), 3000)
+  }
+
+  const handleChangePassword = async () => {
+    setPassError('')
+    setPassSuccess(false)
+
+    if (!currentPass) {
+      setPassError('Vui lòng nhập mật khẩu hiện tại')
+      return
+    }
+    if (newPass.length < 6) {
+      setPassError('Mật khẩu mới phải có ít nhất 6 ký tự')
+      return
+    }
+    if (newPass !== confirmPass) {
+      setPassError('Mật khẩu mới và xác nhận không khớp')
+      return
+    }
+
+    setIsChangingPass(true)
+    const ok = await changePassword(currentPass, newPass)
+    setIsChangingPass(false)
+    
+    if (ok) {
+      setPassSuccess(true)
+      setCurrentPass('')
+      setNewPass('')
+      setConfirmPass('')
+      setTimeout(() => setPassSuccess(false), 5000)
+    } else {
+      setPassError('Mật khẩu hiện tại không đúng')
+    }
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-8">
@@ -60,7 +109,7 @@ export function ProfilePage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium leading-none">Hoạt động bình thường</p>
-                  <p className="text-xs text-muted-foreground mt-1">Lần đăng nhập cuối: {new Date().toLocaleDateString('vi-VN')}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Lần đăng nhập cuối: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}</p>
                 </div>
               </div>
             </CardContent>
@@ -93,14 +142,14 @@ export function ProfilePage() {
                   <Label>Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input defaultValue={user.email} className="pl-9" />
+                    <Input value={email} onChange={e => setEmail(e.target.value)} className="pl-9" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Số điện thoại</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input defaultValue={user.phone} className="pl-9" />
+                    <Input value={phone} onChange={e => setPhone(e.target.value)} className="pl-9" />
                   </div>
                 </div>
               </div>
@@ -113,8 +162,15 @@ export function ProfilePage() {
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <Button>Lưu thay đổi</Button>
+              <div className="flex items-center justify-between">
+                {profileSaved && (
+                  <div className="flex items-center gap-2 text-sm text-green-600 font-medium animate-fade-in">
+                    <CheckCircle2 className="h-4 w-4" /> Đã lưu thành công!
+                  </div>
+                )}
+                <div className="ml-auto">
+                  <Button onClick={handleSaveProfile}>Lưu thay đổi</Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -127,20 +183,34 @@ export function ProfilePage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Mật khẩu hiện tại</Label>
-                <Input type="password" />
+                <Input type="password" value={currentPass} onChange={e => setCurrentPass(e.target.value)} placeholder="Nhập mật khẩu hiện tại..." />
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Mật khẩu mới</Label>
-                  <Input type="password" />
+                  <Input type="password" value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Nhập mật khẩu mới..." />
                 </div>
                 <div className="space-y-2">
                   <Label>Nhập lại mật khẩu mới</Label>
-                  <Input type="password" />
+                  <Input type="password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)} placeholder="Xác nhận mật khẩu mới..." />
                 </div>
               </div>
+              
+              {passError && (
+                <div className="flex items-center gap-2 text-sm text-red-600 font-medium p-3 bg-red-50 rounded-lg">
+                  <AlertCircle className="h-4 w-4 shrink-0" /> {passError}
+                </div>
+              )}
+              {passSuccess && (
+                <div className="flex items-center gap-2 text-sm text-green-600 font-medium p-3 bg-green-50 rounded-lg">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" /> Đã cập nhật mật khẩu thành công!
+                </div>
+              )}
+
               <div className="flex justify-end mt-4">
-                <Button variant="secondary">Cập nhật mật khẩu</Button>
+                <Button variant="secondary" onClick={handleChangePassword} disabled={isChangingPass}>
+                  {isChangingPass ? 'Đang xử lý...' : 'Cập nhật mật khẩu'}
+                </Button>
               </div>
             </CardContent>
           </Card>

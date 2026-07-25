@@ -22,14 +22,16 @@ export function CoursesPage() {
   if (!user) return null
 
   // Process courses with progress and derive data
-  const coursesWithData = courses.map(course => {
+  const coursesWithData = courses.filter(c => c.isPublished).map(course => {
     const chapters = getChaptersByCourse(course.id)
     const lessons = chapters.flatMap(chap => getLessonsByChapter(chap.id))
     const progress = getProgressForCourse(user.id, lessons.map(l => l.id))
+    const totalMinutes = lessons.reduce((sum, l) => sum + Math.round(l.durationSeconds / 60), 0)
     
     return {
       ...course,
       lessonsCount: lessons.length,
+      totalMinutes,
       progress,
     }
   })
@@ -156,7 +158,7 @@ export function CoursesPage() {
                 </div>
                 <div className="flex items-center gap-1.5 bg-muted/30 p-2 rounded-md">
                   <Clock className="h-4 w-4 text-secondary-500" />
-                  <span>{Math.round(course.totalDurationSeconds / 3600)} giờ</span>
+                  <span>{course.totalMinutes >= 60 ? `${Math.floor(course.totalMinutes / 60)}h ${course.totalMinutes % 60}m` : `${course.totalMinutes} phút`}</span>
                 </div>
               </div>
               

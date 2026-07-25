@@ -117,7 +117,10 @@ export function CourseDetailPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-secondary-500" />
-                <span className="font-medium text-foreground">{Math.round(course.totalDurationSeconds / 3600)}</span> Giờ học
+                <span className="font-medium text-foreground">{(() => {
+                  const totalMin = allLessons.reduce((sum, l) => sum + Math.round(l.durationSeconds / 60), 0)
+                  return totalMin >= 60 ? `${Math.floor(totalMin / 60)}h ${totalMin % 60}m` : `${totalMin} phút`
+                })()}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-yellow-500" />
