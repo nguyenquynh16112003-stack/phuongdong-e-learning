@@ -9,9 +9,11 @@ interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
+  customPasswords: Record<string, string>
   login: (cccd: string, password: string) => Promise<{ success: boolean; mustChangePassword?: boolean }>
   logout: () => void
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>
+  setCustomPassword: (cccd: string, password: string) => void
   updateUser: (updates: Partial<User>) => void
   clearError: () => void
 }
@@ -23,6 +25,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      customPasswords: {},
 
       login: async (cccd: string, password: string) => {
         set({ isLoading: true, error: null })
@@ -31,7 +34,7 @@ export const useAuthStore = create<AuthState>()(
 
         const dynamicUsers = useUserStore.getState().users
         const user = dynamicUsers.find(u => u.cccd === cccd)
-        const correctPassword = DEMO_PASSWORDS[cccd] || '123456'
+        const correctPassword = get().customPasswords[cccd] || DEMO_PASSWORDS[cccd] || '123456'
 
         if (!user) {
           set({ isLoading: false, error: 'Tài khoản của bạn chưa được cấp quyền truy cập hoặc đã bị khóa. Vui lòng liên hệ Trợ lý hoặc Giám đốc để được hỗ trợ.' })
@@ -63,12 +66,19 @@ export const useAuthStore = create<AuthState>()(
         await new Promise(r => setTimeout(r, 500))
         const { user } = get()
         if (user) {
-          set({ user: { ...user, mustChangePassword: false } })
-          DEMO_PASSWORDS[user.cccd] = _newPassword
+          set({ 
+            user: { ...user, mustChangePassword: false },
+            customPasswords: { ...get().customPasswords, [user.cccd]: _newPassword } 
+          })
+          DEMO_PASSWORDS[user.cccd] = _newPassword // fallback
           // Sync to userStore
           useUserStore.getState().updateUser(user.id, { mustChangePassword: false })
         }
         return true
+      },
+
+      setCustomPassword: (cccd: string, password: string) => {
+        set({ customPasswords: { ...get().customPasswords, [cccd]: password } })
       },
 
       updateUser: (updates: Partial<User>) => {
@@ -85,7 +95,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'phuong-dong-auth',
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated, customPasswords: state.customPasswords }),
     }
   )
 )

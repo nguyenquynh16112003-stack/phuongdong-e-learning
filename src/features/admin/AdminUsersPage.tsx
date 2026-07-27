@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { useUserStore } from '@/stores/userStore'
+import { useAuthStore } from '@/stores/authStore'
 import { Search, Plus, MoreHorizontal, ShieldAlert, CheckCircle2, XCircle, Upload, Download } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
@@ -18,10 +19,13 @@ export function AdminUsersPage() {
   const [fullName, setFullName] = React.useState('')
   const [cccd, setCccd] = React.useState('')
   const [email, setEmail] = React.useState('')
+  const [password, setPassword] = React.useState('')
   const [roleSlug, setRoleSlug] = React.useState<'chuyen_vien' | 'truong_khu_vuc' | 'giam_doc' | 'super_admin'>('chuyen_vien')
   const [phone, setPhone] = React.useState('')
   const [branch, setBranch] = React.useState('Hội sở')
   const [department, setDepartment] = React.useState('Kinh doanh')
+
+  const { setCustomPassword } = useAuthStore()
 
   const handleCreate = () => {
     if (!fullName || !cccd) return
@@ -63,10 +67,15 @@ export function AdminUsersPage() {
       mustChangePassword: true,
     })
 
+    if (password) {
+      setCustomPassword(cccd, password)
+    }
+
     // Reset states
     setFullName('')
     setCccd('')
     setEmail('')
+    setPassword('')
     setPhone('')
     setRoleSlug('chuyen_vien')
     setIsAddOpen(false)
@@ -213,6 +222,10 @@ export function AdminUsersPage() {
                 <div className="space-y-2">
                   <Label>CCCD / Mã nhân viên</Label>
                   <Input placeholder="Dùng làm tên đăng nhập..." value={cccd} onChange={(e) => setCccd(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Mật khẩu đăng nhập</Label>
+                  <Input type="text" placeholder="Để trống sẽ mặc định là 123456" value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
