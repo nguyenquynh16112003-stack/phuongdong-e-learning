@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ChevronLeft, ChevronRight, PlayCircle, CheckCircle2, Lock, FileText, AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import ReactPlayer from 'react-player/lazy'
 
 export function LessonPage() {
   const { courseId, lessonId } = useParams<{ courseId: string, lessonId: string }>()
@@ -58,22 +59,18 @@ export function LessonPage() {
   const isTestPassed = testResults[lesson?.id || ''] || false
 
   // Handle video progress
-  const handleTimeUpdate = () => {
-    if (videoRef.current && lesson) {
-      const { currentTime, duration } = videoRef.current
-      if (duration > 0) {
-        const percentage = Math.round((currentTime / duration) * 100)
-        
-        // Only update store occasionally to avoid too many renders/writes
-        // In a real app, you might debounce this
-        if (percentage % 5 === 0 || percentage > 95) {
-           updateWatchProgress(user.id, lesson.id, percentage)
-           
-           // Auto mark complete if video is near end and no test is required
-           if (percentage > 95 && !hasTest && lesson.status !== 'completed') {
-             markLessonComplete(user.id, lesson.id)
-           }
-        }
+  const handleProgress = (state: { played: number, playedSeconds: number }) => {
+    if (lesson) {
+      const percentage = Math.round(state.played * 100)
+      
+      // Only update store occasionally to avoid too many renders/writes
+      if (percentage % 5 === 0 || percentage > 95) {
+         updateWatchProgress(user.id, lesson.id, percentage)
+         
+         // Auto mark complete if video is near end and no test is required
+         if (percentage > 95 && !hasTest && lesson.status !== 'completed') {
+           markLessonComplete(user.id, lesson.id)
+         }
       }
     }
   }
@@ -125,19 +122,16 @@ export function LessonPage() {
 
         {/* Video Player Area */}
         <div className="bg-black aspect-video rounded-xl overflow-hidden shadow-lg relative flex items-center justify-center mb-6">
-          <video
-            ref={videoRef}
-            src={lesson.videoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
-            className="w-full h-full object-contain"
+          <ReactPlayer
+            url={lesson.videoUrl || lesson.youtubeUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
+            width="100%"
+            height="100%"
             controls
-            onTimeUpdate={handleTimeUpdate}
+            onProgress={handleProgress}
             onEnded={handleVideoEnded}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
-            poster={course.thumbnailUrl || undefined}
-          >
-            Trình duyệt của bạn không hỗ trợ thẻ video.
-          </video>
+          />
           {!isPlaying && lesson.progress?.watchPercentage === 0 && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
               <div className="w-20 h-20 rounded-full bg-primary-500/80 backdrop-blur-sm flex items-center justify-center">
