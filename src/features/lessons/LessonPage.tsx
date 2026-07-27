@@ -25,6 +25,7 @@ export function LessonPage() {
   const [activeTab, setActiveTab] = React.useState('video')
   const videoRef = React.useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = React.useState(false)
+  const [videoError, setVideoError] = React.useState(false)
 
   const course = fetchCourseById(courseId || '')
   
@@ -131,8 +132,24 @@ export function LessonPage() {
             onEnded={handleVideoEnded}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
+            onError={(e) => {
+              console.error('Video Player Error:', e);
+              setVideoError(true);
+            }}
           />
-          {!isPlaying && lesson.progress?.watchPercentage === 0 && (
+          {videoError && (
+            <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center p-6 text-center z-10">
+              <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+              <h3 className="text-white font-bold text-lg mb-2">Không thể tải Video</h3>
+              <p className="text-gray-300 text-sm max-w-md">
+                Đường link video không hợp lệ hoặc không được hỗ trợ. Hãy báo cáo cho Admin kiểm tra lại link video này (Chỉ hỗ trợ link YouTube hoặc link file .mp4 trực tiếp).
+              </p>
+              <Button className="mt-4" onClick={() => markLessonComplete(user.id, lesson.id)}>
+                Đánh dấu đã xem (Bỏ qua)
+              </Button>
+            </div>
+          )}
+          {!isPlaying && !videoError && lesson.progress?.watchPercentage === 0 && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
               <div className="w-20 h-20 rounded-full bg-primary-500/80 backdrop-blur-sm flex items-center justify-center">
                 <PlayCircle className="w-10 h-10 text-white ml-1" />

@@ -350,8 +350,8 @@ export function AdminCourseDetailPage() {
 
             <div className="space-y-2">
               <Label>Link Video (URL/Youtube)</Label>
-              <Input placeholder="https://..." value={lessonVideoUrl} onChange={e => setLessonVideoUrl(e.target.value)} />
-              <p className="text-xs text-muted-foreground">Ví dụ: Link file mp4 hoặc link youtube.</p>
+              <Input placeholder="https://www.youtube.com/watch?v=..." value={lessonVideoUrl} onChange={e => setLessonVideoUrl(e.target.value)} />
+              <p className="text-xs text-red-500 font-medium mt-1">Lưu ý quan trọng: Chỉ copy nguyên đường link YouTube HOẶC link file kết thúc bằng .mp4. KHÔNG hỗ trợ link Google Drive! (Bạn có thể bỏ trống để dùng video mẫu).</p>
             </div>
 
             <div className="space-y-2">
