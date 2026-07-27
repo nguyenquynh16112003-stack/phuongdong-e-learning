@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Course, Chapter, Lesson, Test } from '@/types'
+import type { Course, Chapter, Lesson, Test, Question } from '@/types'
 import { COURSES, CHAPTERS, LESSONS, TESTS } from '@/data/mockData'
 
 interface CourseState {
@@ -8,6 +8,7 @@ interface CourseState {
   chapters: Chapter[]
   lessons: Lesson[]
   tests: Test[]
+  questions: Question[]
   currentCourse: Course | null
   currentLesson: Lesson | null
   currentTest: Test | null
@@ -19,6 +20,7 @@ interface CourseState {
   fetchTestByLessonId: (lessonId: string) => Test | undefined
   getChaptersByCourse: (courseId: string) => Chapter[]
   getLessonsByChapter: (chapterId: string) => Lesson[]
+  getQuestionsByTest: (testId: string) => Question[]
   setCurrentCourse: (course: Course | null) => void
   setCurrentLesson: (lesson: Lesson | null) => void
   setCurrentTest: (test: Test | null) => void
@@ -36,6 +38,9 @@ interface CourseState {
   createTest: (test: Omit<Test, 'id' | 'createdAt' | 'updatedAt'>) => Test
   updateTest: (id: string, updates: Partial<Test>) => void
   deleteTest: (id: string) => void
+  createQuestion: (question: Omit<Question, 'id'>) => Question
+  updateQuestion: (id: string, updates: Partial<Question>) => void
+  deleteQuestion: (id: string) => void
   togglePublishCourse: (id: string) => void
 }
 
@@ -46,6 +51,7 @@ export const useCourseStore = create<CourseState>()(
       chapters: CHAPTERS,
       lessons: LESSONS,
       tests: TESTS,
+      questions: [],
       currentCourse: null,
       currentLesson: null,
       currentTest: null,
@@ -64,6 +70,9 @@ export const useCourseStore = create<CourseState>()(
 
       getLessonsByChapter: (chapterId) =>
         get().lessons.filter(l => l.chapterId === chapterId).sort((a, b) => a.orderIndex - b.orderIndex),
+
+      getQuestionsByTest: (testId) =>
+        get().questions.filter(q => q.testId === testId).sort((a, b) => a.orderIndex - b.orderIndex),
 
       setCurrentCourse: (course) => set({ currentCourse: course }),
       setCurrentLesson: (lesson) => set({ currentLesson: lesson }),
@@ -121,6 +130,18 @@ export const useCourseStore = create<CourseState>()(
       deleteTest: (id) =>
         set(s => ({ tests: s.tests.filter(t => t.id !== id) })),
 
+      createQuestion: (question) => {
+        const newQuestion: Question = { ...question, id: `question-${Date.now()}` }
+        set(s => ({ questions: [...s.questions, newQuestion] }))
+        return newQuestion
+      },
+
+      updateQuestion: (id, updates) =>
+        set(s => ({ questions: s.questions.map(q => q.id === id ? { ...q, ...updates } : q) })),
+
+      deleteQuestion: (id) =>
+        set(s => ({ questions: s.questions.filter(q => q.id !== id) })),
+
       togglePublishCourse: (id) =>
         set(s => ({ courses: s.courses.map(c => c.id === id ? { ...c, isPublished: !c.isPublished, updatedAt: new Date().toISOString() } : c) })),
     }),
@@ -131,6 +152,7 @@ export const useCourseStore = create<CourseState>()(
         chapters: state.chapters,
         lessons: state.lessons,
         tests: state.tests,
+        questions: state.questions,
       })
     }
   )

@@ -16,7 +16,7 @@ export function TestPage() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   
-  const { fetchCourseById, tests, fetchLessonById } = useCourseStore()
+  const { fetchCourseById, tests, fetchLessonById, getQuestionsByTest } = useCourseStore()
   const { submitTest, getLatestResult } = useTestStore()
   const { markLessonComplete } = useProgressStore()
 
@@ -30,27 +30,7 @@ export function TestPage() {
   const lesson = fetchLessonById(lessonId || '')
   const testInfo = tests.find(t => t.lessonId === lessonId)
   
-  // Dummy questions since we don't have them in types yet
-  const questions = React.useMemo(() => [
-    { id: 'q1', text: 'Khách hàng có nhu cầu mua đầu tư, yếu tố nào quan trọng nhất?', options: [
-      { id: 'o1', text: 'Tiện ích nội khu' },
-      { id: 'o2', text: 'Thiết kế căn hộ' },
-      { id: 'o3', text: 'Tiềm năng tăng giá và dòng tiền' },
-      { id: 'o4', text: 'Hướng phong thủy' },
-    ], correctOptionId: 'o3' },
-    { id: 'q2', text: 'Chính sách bán hàng dự án A, mức chiết khấu thanh toán sớm là bao nhiêu?', options: [
-      { id: 'o1', text: '5%' },
-      { id: 'o2', text: '7%' },
-      { id: 'o3', text: '10%' },
-      { id: 'o4', text: '12%' },
-    ], correctOptionId: 'o3' },
-    { id: 'q3', text: 'Kỹ năng nào KHÔNG thuộc quy trình xử lý từ chối?', options: [
-      { id: 'o1', text: 'Lắng nghe đồng cảm' },
-      { id: 'o2', text: 'Cô lập vấn đề' },
-      { id: 'o3', text: 'Tranh luận để chứng minh khách sai' },
-      { id: 'o4', text: 'Đưa ra giải pháp' },
-    ], correctOptionId: 'o3' },
-  ], [])
+  const questions = getQuestionsByTest(testInfo?.id || '')
 
   // Timer logic
   React.useEffect(() => {
@@ -113,7 +93,8 @@ export function TestPage() {
     // Calculate score
     let correctCount = 0
     questions.forEach(q => {
-      if (answers[q.id] === q.correctOptionId) {
+      const correctAns = q.answers.find(a => a.isCorrect)
+      if (correctAns && answers[q.id] === correctAns.id) {
         correctCount++
       }
     })
@@ -215,6 +196,15 @@ export function TestPage() {
 
   const currentQuestion = questions[currentQuestionIndex]
 
+  if (!currentQuestion) {
+    return (
+      <div className="p-8 text-center animate-fade-in pb-20">
+        <h2 className="text-xl font-bold mb-4">Bài kiểm tra chưa có câu hỏi nào</h2>
+        <Button onClick={() => navigate(`/courses/${course.id}`)}>Quay lại bài học</Button>
+      </div>
+    )
+  }
+
   // Render Taking Test View
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in pb-20">
@@ -252,24 +242,25 @@ export function TestPage() {
           <CardTitle className="text-lg">Câu hỏi {currentQuestionIndex + 1} / {questions.length}</CardTitle>
         </CardHeader>
         <CardContent className="flex-1">
-          <p className="text-lg font-medium mb-6">{currentQuestion.text}</p>
+          <p className="text-lg font-medium mb-6">{currentQuestion.content}</p>
           
           <RadioGroup 
             value={answers[currentQuestion.id] || ''} 
             onValueChange={(val) => handleAnswerChange(currentQuestion.id, val)}
             className="space-y-3"
           >
-            {currentQuestion.options.map((option) => (
+            {currentQuestion.answers.map((ans) => (
               <div 
-                key={option.id} 
+                key={ans.id} 
                 className={`flex items-center space-x-3 space-y-0 p-4 border rounded-xl cursor-pointer transition-colors
-                  ${answers[currentQuestion.id] === option.id ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'hover:bg-muted/50'}
+                  ${answers[currentQuestion.id] === ans.id ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'hover:bg-muted/50'}
                 `}
-                onClick={() => handleAnswerChange(currentQuestion.id, option.id)}
+                onClick={() => handleAnswerChange(currentQuestion.id, ans.id)}
               >
-                <RadioGroupItem value={option.id} id={option.id} />
-                <Label htmlFor={option.id} className="flex-1 cursor-pointer font-normal text-base leading-relaxed">
-                  {option.text}
+                <RadioGroupItem value={ans.id} id={ans.id} />
+                <Label htmlFor={ans.id} className="flex-1 cursor-pointer font-normal text-base leading-relaxed">
+                  <span className="font-bold mr-2 text-muted-foreground">{ans.label}.</span>
+                  {ans.content}
                 </Label>
               </div>
             ))}

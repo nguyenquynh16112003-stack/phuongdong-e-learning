@@ -5,11 +5,13 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { useCourseStore } from '@/stores/courseStore'
-import { Search, Plus, Edit, Trash2, Clock, CheckCircle } from 'lucide-react'
+import { Search, Plus, Edit, Trash2, Clock, CheckCircle, FileText } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 
 export function AdminTestsPage() {
+  const navigate = useNavigate()
   const { tests, lessons, createTest, updateTest, deleteTest } = useCourseStore()
   const [searchTerm, setSearchTerm] = React.useState('')
 
@@ -219,8 +221,11 @@ export function AdminTestsPage() {
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(test)} title="Sửa bài thi">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(test)} title="Sửa thông tin bài thi">
                         <Edit className="h-4 w-4 text-primary-600" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/tests/${test.id}`)} title="Quản lý câu hỏi">
+                        <FileText className="h-4 w-4 text-orange-500" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => deleteTest(test.id)} title="Xóa">
                         <Trash2 className="h-4 w-4 text-red-500" />
