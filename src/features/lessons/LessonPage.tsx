@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ChevronLeft, ChevronRight, PlayCircle, CheckCircle2, Lock, FileText, AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import ReactPlayer from 'react-player/lazy'
+import ReactPlayer from 'react-player'
 
 export function LessonPage() {
   const { courseId, lessonId } = useParams<{ courseId: string, lessonId: string }>()
@@ -123,7 +123,7 @@ export function LessonPage() {
         {/* Video Player Area */}
         <div className="bg-black aspect-video rounded-xl overflow-hidden shadow-lg relative flex items-center justify-center mb-6">
           <ReactPlayer
-            url={lesson.videoUrl || lesson.youtubeUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
+            url={lesson.videoUrl || lesson.youtubeUrl || "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
             width="100%"
             height="100%"
             controls
