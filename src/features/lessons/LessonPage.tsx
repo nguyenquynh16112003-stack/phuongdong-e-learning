@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ChevronLeft, ChevronRight, PlayCircle, CheckCircle2, Lock, FileText, AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import ReactPlayer from 'react-player/lazy'
+import ReactPlayer from 'react-player'
 
 export function LessonPage() {
   const { courseId, lessonId } = useParams<{ courseId: string, lessonId: string }>()
