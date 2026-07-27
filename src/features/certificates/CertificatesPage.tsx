@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Award, Download, Share2, Search, Filter } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/stores/authStore'
+import { useCertificateStore } from '@/stores/certificateStore'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 
 export function CertificatesPage() {
@@ -12,47 +13,22 @@ export function CertificatesPage() {
   const [searchTerm, setSearchTerm] = React.useState('')
   const [selectedCert, setSelectedCert] = React.useState<any>(null)
 
+  const { getUserCertificates } = useCertificateStore()
+
   if (!user) return null
 
-  // Mock data
-  const certificates = [
-    {
-      id: 'cert-1',
-      title: 'Kỹ Năng Bán Hàng Bất Động Sản Chuyên Nghiệp',
-      issueDate: '2023-11-15',
-      courseCategory: 'Kỹ năng mềm',
-      grade: 'Xuất sắc',
-      imageUrl: 'https://images.unsplash.com/photo-1589330694653-efa6475306e1?q=80&w=2000&auto=format&fit=crop',
-    },
-    {
-      id: 'cert-2',
-      title: 'Pháp Lý Bất Động Sản Căn Bản',
-      issueDate: '2023-10-02',
-      courseCategory: 'Kiến thức chuyên môn',
-      grade: 'Giỏi',
-      imageUrl: 'https://images.unsplash.com/photo-1555849898-f29e0434c9bb?q=80&w=2000&auto=format&fit=crop',
-    },
-    {
-      id: 'cert-3',
-      title: 'Digital Marketing Trong BĐS',
-      issueDate: '2023-08-20',
-      courseCategory: 'Marketing',
-      grade: 'Khá',
-      imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=2000&auto=format&fit=crop',
-    }
-  ]
+  const certificates = getUserCertificates(user.id)
 
   const filteredCerts = certificates.filter(c => 
-    c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.courseCategory.toLowerCase().includes(searchTerm.toLowerCase())
+    c.courseTitle.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const handleDownload = (cert: any) => {
-    alert(`Đang khởi tạo tải xuống chứng chỉ: ${cert.title}.pdf`);
+    alert(`Đang khởi tạo tải xuống chứng chỉ: ${cert.courseTitle}.pdf`);
   }
 
   const handleShare = (cert: any) => {
-    alert(`Đã sao chép liên kết chứng chỉ "${cert.title}" để chia sẻ!`);
+    alert(`Đã sao chép liên kết chứng chỉ "${cert.courseTitle}" để chia sẻ!`);
   }
 
   return (
@@ -92,7 +68,7 @@ export function CertificatesPage() {
                 <Award className="h-6 w-6 text-yellow-500 mb-1" />
                 <div className="text-[10px] font-bold text-primary-900 uppercase tracking-widest mb-1">Phương Đông</div>
                 <div className="text-xs font-serif italic text-gray-800 leading-tight mb-2 font-semibold">Chứng nhận hoàn thành</div>
-                <div className="text-xs font-bold text-primary-700 line-clamp-2 leading-tight">{cert.title}</div>
+                <div className="text-xs font-bold text-primary-700 line-clamp-2 leading-tight">{cert.courseTitle}</div>
               </div>
 
               {/* Hover Actions */}
@@ -108,21 +84,18 @@ export function CertificatesPage() {
             
             <CardContent className="p-5">
               <div className="flex justify-between items-start mb-2">
-                <Badge variant="outline" className="bg-muted/50">{cert.courseCategory}</Badge>
+                <Badge variant="outline" className="bg-muted/50">Khóa học</Badge>
                 <span className="text-xs text-muted-foreground font-medium">
-                  {new Date(cert.issueDate).toLocaleDateString('vi-VN')}
+                  {new Date(cert.issuedAt).toLocaleDateString('vi-VN')}
                 </span>
               </div>
               
-              <h3 className="font-bold text-lg mb-4 line-clamp-2" title={cert.title}>{cert.title}</h3>
+              <h3 className="font-bold text-lg mb-4 line-clamp-2" title={cert.courseTitle}>{cert.courseTitle}</h3>
               
               <div className="flex items-center justify-between border-t pt-4">
                 <div className="text-sm">
                   <span className="text-muted-foreground">Xếp loại: </span>
-                  <span className={`font-semibold ${
-                    cert.grade === 'Xuất sắc' ? 'text-yellow-600' :
-                    cert.grade === 'Giỏi' ? 'text-green-600' : 'text-blue-600'
-                  }`}>{cert.grade}</span>
+                  <span className="font-semibold text-green-600">Giỏi</span>
                 </div>
                 <Button variant="link" className="px-0 h-auto text-primary-600" onClick={() => setSelectedCert(cert)}>Xem chi tiết</Button>
               </div>
@@ -171,17 +144,17 @@ export function CertificatesPage() {
                   Đã hoàn thành xuất sắc khóa đào tạo chuyên môn:
                 </p>
                 <p className="text-xl font-bold text-gray-900 max-w-lg leading-snug mt-2 font-heading">
-                  {selectedCert.title}
+                  {selectedCert.courseTitle}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-12 w-full pt-8 text-sm">
                 <div>
                   <p className="text-gray-500 font-serif italic">Ngày cấp chứng chỉ</p>
-                  <p className="font-semibold">{new Date(selectedCert.issueDate).toLocaleDateString('vi-VN')}</p>
+                  <p className="font-semibold">{new Date(selectedCert.issuedAt).toLocaleDateString('vi-VN')}</p>
                 </div>
                 <div>
                   <p className="text-gray-500 font-serif italic">Xếp loại học tập</p>
-                  <p className="font-semibold text-primary-750">{selectedCert.grade}</p>
+                  <p className="font-semibold text-primary-750">Giỏi</p>
                 </div>
               </div>
               <div className="pt-8 w-full flex justify-between items-end">

@@ -4,6 +4,8 @@ import { useCourseStore } from '@/stores/courseStore'
 import { useTestStore } from '@/stores/testStore'
 import { useProgressStore } from '@/stores/progressStore'
 import { useAuthStore } from '@/stores/authStore'
+import { useGamificationStore } from '@/stores/gamificationStore'
+import { useCertificateStore } from '@/stores/certificateStore'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -19,6 +21,8 @@ export function TestPage() {
   const { fetchCourseById, tests, fetchLessonById, getQuestionsByTest } = useCourseStore()
   const { submitTest, getLatestResult } = useTestStore()
   const { markLessonComplete } = useProgressStore()
+  const { addXP, checkAndAwardBadges } = useGamificationStore()
+  const { issueCertificate } = useCertificateStore()
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState(0)
   const [answers, setAnswers] = React.useState<Record<string, string>>({})
@@ -114,6 +118,20 @@ export function TestPage() {
 
     if (isPassed) {
       markLessonComplete(user.id, lessonId || '')
+      
+      // Earn XP for passing test
+      addXP(user.id, 50)
+      
+      // Check perfect score
+      if (score === 100) {
+        checkAndAwardBadges(user.id, 'perfect_score', 1)
+      }
+
+      // Automatically issue certificate if this is the end of the course
+      // (For now, we just mock that they completed the course and issue it)
+      if (course) {
+        issueCertificate(user.id, user.fullName, course.id, course.title)
+      }
     }
 
     setTestResult(result)
