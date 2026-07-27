@@ -3,13 +3,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, BookOpen, GraduationCap, TrendingUp, Download, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { useUserStore } from '@/stores/userStore'
+import { useCourseStore } from '@/stores/courseStore'
+import { useCertificateStore } from '@/stores/certificateStore'
 
 export function AdminReportsPage() {
+  const { users } = useUserStore()
+  const { courses } = useCourseStore()
+  const { certificates } = useCertificateStore()
+
+  const totalUsers = users.filter(u => u.isActive).length
+  const publishedCourses = courses.filter(c => c.isPublished).length
+  const totalCertificates = certificates.length
+  
+  const totalXP = users.reduce((sum, u) => sum + (u.xpPoints || 0), 0)
+  const avgXP = totalUsers > 0 ? Math.round(totalXP / totalUsers) : 0
+
   const stats = [
-    { label: 'Tổng Học Viên', value: '1,248', icon: Users, color: 'text-blue-500', bg: 'bg-blue-100' },
-    { label: 'Khóa Học Đang Mở', value: '24', icon: BookOpen, color: 'text-green-500', bg: 'bg-green-100' },
-    { label: 'Lượt Hoàn Thành', value: '3,842', icon: GraduationCap, color: 'text-purple-500', bg: 'bg-purple-100' },
-    { label: 'Điểm Trung Bình', value: '8.5', icon: TrendingUp, color: 'text-orange-500', bg: 'bg-orange-100' },
+    { label: 'Tổng Học Viên', value: totalUsers.toString(), icon: Users, color: 'text-blue-500', bg: 'bg-blue-100' },
+    { label: 'Khóa Học Đang Mở', value: publishedCourses.toString(), icon: BookOpen, color: 'text-green-500', bg: 'bg-green-100' },
+    { label: 'Chứng Chỉ Đã Cấp', value: totalCertificates.toString(), icon: GraduationCap, color: 'text-purple-500', bg: 'bg-purple-100' },
+    { label: 'XP Trung Bình', value: avgXP.toString(), icon: TrendingUp, color: 'text-orange-500', bg: 'bg-orange-100' },
   ]
 
   const completionData = [
@@ -21,12 +35,16 @@ export function AdminReportsPage() {
     { name: 'T6', percent: 92 },
   ]
 
-  const branchData = [
-    { name: 'CN Hà Nội', value: 450 },
-    { name: 'CN Sài Gòn', value: 520 },
-    { name: 'CN Đà Nẵng', value: 180 },
-    { name: 'CN Hải Phòng', value: 98 },
-  ]
+  const branchCounts: Record<string, number> = {}
+  users.forEach(u => {
+    if (u.isActive) {
+      branchCounts[u.branch] = (branchCounts[u.branch] || 0) + 1
+    }
+  })
+  const branchData = Object.keys(branchCounts).map(branchName => ({
+    name: branchName,
+    value: branchCounts[branchName]
+  })).sort((a, b) => b.value - a.value).slice(0, 5)
   const COLORS = ['#003566', '#FF6B00', '#00A8E8', '#22C55E']
 
   return (

@@ -5,12 +5,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useAuthStore } from '@/stores/authStore'
-import { Camera, Building2, Mail, Phone, Shield, CheckCircle2, AlertCircle } from 'lucide-react'
+import { useGamificationStore } from '@/stores/gamificationStore'
+import { Camera, Building2, Mail, Phone, Shield, CheckCircle2, AlertCircle, Award, Flame, Zap } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 
 export function ProfilePage() {
   const { user, updateUser, changePassword } = useAuthStore()
+  const { getUserBadges, getUserStats } = useGamificationStore()
 
   const [email, setEmail] = React.useState(user?.email || '')
   const [phone, setPhone] = React.useState(user?.phone || '')
@@ -24,6 +27,8 @@ export function ProfilePage() {
   const [isChangingPass, setIsChangingPass] = React.useState(false)
 
   if (!user) return null
+
+  const userBadges = getUserBadges(user.id)
 
   const handleSaveProfile = () => {
     updateUser({ email, phone })
@@ -111,6 +116,43 @@ export function ProfilePage() {
                   <p className="text-sm font-medium leading-none">Hoạt động bình thường</p>
                   <p className="text-xs text-muted-foreground mt-1">Lần đăng nhập cuối: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString('vi-VN') : new Date().toLocaleDateString('vi-VN')}</p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Gamification Stats */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Thành tích học tập</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-2 text-center mb-4">
+                <div className="bg-primary-50 rounded-lg p-3 border border-primary-100">
+                  <div className="text-2xl font-bold text-primary-700 font-heading">{user.xpPoints || 0}</div>
+                  <div className="text-xs text-primary-600 font-medium">Điểm XP</div>
+                </div>
+                <div className="bg-orange-50 rounded-lg p-3 border border-orange-100">
+                  <div className="text-2xl font-bold text-orange-600 font-heading">{user.streakDays || 0}</div>
+                  <div className="text-xs text-orange-600 font-medium">Ngày liên tiếp</div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2"><Award className="h-4 w-4" /> Huy hiệu</h4>
+                {userBadges.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic text-center py-4 bg-muted/30 rounded-lg border border-dashed">
+                    Chưa có huy hiệu nào.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {userBadges.map(ub => (
+                      <div key={ub.id} className="flex items-center gap-1.5 bg-muted/40 hover:bg-muted/80 transition-colors px-2 py-1.5 rounded border text-xs" title={ub.badge.description}>
+                        <span className="text-lg leading-none">{ub.badge.icon}</span>
+                        <span className="font-medium max-w-[90px] truncate">{ub.badge.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
