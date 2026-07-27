@@ -124,7 +124,7 @@ export function LessonPage() {
         {/* Video Player Area */}
         <div className="bg-black aspect-video rounded-xl overflow-hidden shadow-lg relative flex items-center justify-center mb-6">
           <ReactPlayer
-            url={lesson.videoUrl || lesson.youtubeUrl || "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
+            url={lesson.videoUrl?.trim() || lesson.youtubeUrl?.trim() || "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
             width="100%"
             height="100%"
             controls
