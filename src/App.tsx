@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from '@/components/ui/toaster'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { FirebaseSync } from '@/lib/FirebaseSync'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { ChangePasswordPage } from '@/features/auth/ChangePasswordPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
@@ -33,6 +35,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <FirebaseSync />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
